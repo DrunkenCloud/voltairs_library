@@ -4,8 +4,47 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import { useState } from "react"
+import { backendUrl } from "@/lib/utils";
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
+
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${backendUrl}/login` ,{
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.token);
+        router.push(`/user/${username}`);
+      } else if (response.status == 401) {
+        setMessage("Invalid username or password.");
+      } else if (response.status == 400) {
+        setMessage(`Missing username or password.`);
+      } else {
+        const text = response.text();
+        setMessage(`Login Failed: ${text}`);
+      }
+    } catch (e) {
+      setMessage("Network error: could not connect to server.");
+      console.error("Login error:", e);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -14,14 +53,15 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold mb-6 text-center">Log in to your account</h2>
           <form className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
               </label>
               <input
-                id="email"
-                type="email"
+                id="username"
+                type="text"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="you@example.com"
+                placeholder="reader123"
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
 
@@ -34,12 +74,14 @@ export default function LoginPage() {
                 type="password"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="••••••••"
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" onClick={handleLoginSubmit}>
               Log In
             </Button>
+            {message && <p className="text-sm text-red-500">{message}</p>}
           </form>
 
           <p className="text-sm text-gray-600 text-center mt-6">
