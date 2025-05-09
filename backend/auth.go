@@ -22,7 +22,6 @@ func InitJWT() {
 	if jwtKey == "" {
 		log.Fatal("JWT_KEY not set")
 	}
-	fmt.Println("Loaded JWT Key:", jwtKey)
 }
 
 func GenerateJWT(username string) (string, error) {

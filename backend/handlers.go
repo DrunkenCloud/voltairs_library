@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -13,11 +15,24 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var user User
-	json.NewDecoder(r.Body).Decode(&user)
+
+	var user SignupPayload
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid data", http.StatusBadRequest)
+		return
+	}
 
 	if user.Username == "" || user.Password == "" {
 		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		return
+	}
+
+	expectedCode, err := RedisGet(user.Email)
+	if err != nil {
+		fmt.Println("handlers.go -> SignupHandler: ", err.Error())
+	}
+	if expectedCode == "" || expectedCode != user.Code {
+		http.Error(w, "Invalid or expired verification code", http.StatusUnauthorized)
 		return
 	}
 
@@ -35,6 +50,10 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = RedisDel(user.Email)
+	if err != nil {
+		fmt.Println("handlers.go -> SignupHandler: ", err.Error())
+	}
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -46,7 +65,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 	json.NewDecoder(r.Body).Decode(&user)
 
-	fmt.Println(user.Username, user.Password)
 	if user.Username == "" || user.Password == "" {
 		http.Error(w, "Username and password are required", http.StatusBadRequest)
 		return
@@ -74,10 +92,40 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(user.Username)
-	fmt.Println(user.Password)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
+
+func SendCodeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	type Req struct {
+		Email string `json:"email"`
+	}
+	var req Req
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" {
+		http.Error(w, "Invalid email", http.StatusBadRequest)
+		return
+	}
+
+	rateLimitKey := "ratelimit:" + req.Email
+	ok, _ := RedisClient.SetNX(ctx, rateLimitKey, "1", time.Minute).Result()
+	if !ok {
+		http.Error(w, "Wait 1 minute before requesting again", http.StatusTooManyRequests)
+		return
+	}
+
+	code := fmt.Sprintf("%06d", rand.Intn(1000000))
+
+	if err := RedisSet(req.Email, code, 10*time.Minute); err != nil {
+		http.Error(w, "Failed to store code", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Code sent"))
 }
 
 func TokenVerificationHandler(w http.ResponseWriter, r *http.Request) {

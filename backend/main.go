@@ -23,12 +23,15 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 func main() {
 	InitDB()
 	InitJWT()
+	InitStmp()
+	InitRedis()
 	defer DB.Close()
 
 	http.HandleFunc("/signup", withCORS(SignupHandler))
 	http.HandleFunc("/login", withCORS(LoginHandler))
 	http.HandleFunc("/verify", withCORS(TokenVerificationHandler))
+	http.HandleFunc("/send-code", withCORS(SendCodeHandler))
 
-	log.Println("Server started at :8080")
+	log.Println("Server started at localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
