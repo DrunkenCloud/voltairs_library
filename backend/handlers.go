@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -111,7 +112,7 @@ func SendCodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rateLimitKey := "ratelimit:" + req.Email
-	ok, _ := RedisClient.SetNX(ctx, rateLimitKey, "1", time.Minute).Result()
+	ok, _ := RedisClient.SetNX(ctx, rateLimitKey, "1", 1*time.Minute).Result()
 	if !ok {
 		http.Error(w, "Wait 1 minute before requesting again", http.StatusTooManyRequests)
 		return
@@ -124,36 +125,70 @@ func SendCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	codeInt, _ := strconv.Atoi(code)
+	SendVerificationCode(codeInt, req.Email)
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Code sent"))
 }
 
 func TokenVerificationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if r.Method != "GET" {
+		http.Error(w, "Only GET allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var reqBody struct {
-		Token string `json:"token"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		fmt.Println("handlers.go -> TokenVerificationHandler: ", err.Error())
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	tokenString := r.Header.Get("Authorization")
+	usernameFromToken, err := VerifyToken(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	if reqBody.Token == "" {
-		http.Error(w, "Token is required", http.StatusUnauthorized)
+	var req User
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}
 
-	if err := VerifyToken(reqBody.Token); err != nil {
-		fmt.Println("handlers.go -> TokenVerificationHandler: ", err.Error())
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+	if req.Username != usernameFromToken {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	tokenString := r.Header.Get("Authorization")
+	usernameFromToken, err := VerifyToken(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	var req User
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Username != usernameFromToken {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	_, err = DB.Exec("UPDATE users SET bio = ?, photo = ? WHERE username = ?", req.Bio, req.Photo, req.Username)
+	if err != nil {
+		fmt.Println("handlers.go -> UpdateUserHandler: ", err.Error())
+		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Token is valid"))
+	w.Write([]byte("Profile updated"))
 }

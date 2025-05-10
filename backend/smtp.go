@@ -36,5 +36,6 @@ func SendVerificationCode(Code int, Email string) error {
 		fmt.Println("smtp.go -> SendVerificationCode: ", err.Error())
 		return err
 	}
+
 	return nil
 }

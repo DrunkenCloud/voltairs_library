@@ -4,6 +4,8 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
+	Photo    string `json:"photo"`
+	Bio      string `json:"bio"`
 }
 
 type SignupPayload struct {

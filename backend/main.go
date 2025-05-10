@@ -29,8 +29,9 @@ func main() {
 
 	http.HandleFunc("/signup", withCORS(SignupHandler))
 	http.HandleFunc("/login", withCORS(LoginHandler))
-	http.HandleFunc("/verify", withCORS(TokenVerificationHandler))
 	http.HandleFunc("/send-code", withCORS(SendCodeHandler))
+	http.HandleFunc("/update-user", withCORS(UpdateUserHandler))
+	http.HandleFunc("/verify-user", withCORS(TokenVerificationHandler))
 
 	log.Println("Server started at localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
