@@ -2,18 +2,18 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 import { useState } from "react"
 import { backendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation"
+import { useUser } from "@/components/user-context"
 
 export default function LoginPage() {
 
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [username, setInputUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const { setIsLoggedIn, setUsername } = useUser()
   
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +30,8 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("token", data.token);
+        setIsLoggedIn(true);
+        setUsername(username);
         router.push(`/user/${username}`);
       } else if (response.status == 401) {
         setMessage("Invalid username or password.");
@@ -47,7 +49,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
       <main className="flex-grow flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md border">
           <h2 className="text-2xl font-bold mb-6 text-center">Log in to your account</h2>
@@ -61,7 +62,7 @@ export default function LoginPage() {
                 type="text"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="reader123"
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setInputUsername(e.target.value)}
               />
             </div>
 
@@ -92,7 +93,6 @@ export default function LoginPage() {
           </p>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

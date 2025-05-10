@@ -2,14 +2,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, ChevronDown, Filter, List, Search, Star, LayoutGrid } from "lucide-react"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 
 export default function MyBooksPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-
       <main className="container px-4 py-8 mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -303,8 +299,6 @@ export default function MyBooksPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }

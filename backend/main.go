@@ -8,7 +8,7 @@ import (
 func withCORS(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Username")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 
 		if r.Method == "OPTIONS" {

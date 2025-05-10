@@ -2,8 +2,6 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 import { useState } from "react"
 import { backendUrl } from "@/lib/utils"
 import { useRouter } from 'next/navigation';
@@ -80,7 +78,6 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
       <main className="flex-grow flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md border">
           <h2 className="text-2xl font-bold mb-6 text-center">Create your account</h2>
@@ -153,7 +150,6 @@ export default function SignUpPage() {
           </p>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

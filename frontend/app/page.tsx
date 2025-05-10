@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, ChevronRight, Star } from "lucide-react"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 import BookCard from "@/components/BookCard"
 import ReadingListCard from "@/components/ReadingListCard"
 import BlogCard from "@/components/BlogCard"
@@ -11,8 +9,6 @@ import BlogCard from "@/components/BlogCard"
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-
       <main>
         {/* Featured Books Section */}
         <section className="py-12">
@@ -175,8 +171,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   )
 }

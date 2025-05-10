@@ -139,22 +139,12 @@ func TokenVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokenString := r.Header.Get("Authorization")
-	usernameFromToken, err := VerifyToken(tokenString)
+	_, err := VerifyToken(tokenString)
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	var req User
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
-		return
-	}
-
-	if req.Username != usernameFromToken {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
 	w.WriteHeader(http.StatusOK)
 }
 

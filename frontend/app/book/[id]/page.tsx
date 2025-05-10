@@ -2,14 +2,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Bookmark, BookOpen, ChevronDown, Heart, MessageSquare, Share2, Star, User } from "lucide-react"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 
 export default function BookPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-
       <main className="container px-4 py-8 mx-auto">
         <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-emerald-600 mb-6">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Browse
@@ -222,8 +218,6 @@ export default function BookPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }
