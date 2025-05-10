@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { backendUrl } from "@/lib/utils"
+import { backendUrl, parseJWT } from "@/lib/utils"
 
 type UserContextType = {
   isLoggedIn: boolean
@@ -18,22 +18,6 @@ const UserContext = createContext<UserContextType>({
   setUsername: () => {},
   loading: false
 })
-
-function parseJwt(token: string): { username?: string } {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-        .join('')
-    )
-    return JSON.parse(jsonPayload)
-  } catch (err) {
-    return {}
-  }
-}
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -57,7 +41,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         })
 
         if (res.ok) {
-          const payload = parseJwt(token)
+          const payload = parseJWT(token)
           if (payload?.username) {
             setUsername(payload.username)
             setIsLoggedIn(true)

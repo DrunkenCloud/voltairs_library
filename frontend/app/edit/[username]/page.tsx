@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { use } from "react"
-import { backendUrl } from "@/lib/utils"
+import { backendUrl, parseJWT } from "@/lib/utils"
 
 export default function EditProfileClient({ params }: { params: Promise<{ username: string }> }) {
   const currUsername = use(params).username
@@ -10,22 +10,6 @@ export default function EditProfileClient({ params }: { params: Promise<{ userna
   const [photo, setPhoto] = useState("")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
-
-  function parseJwt(token: string): { username?: string } {
-    try {
-      const base64Url = token.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-          .join('')
-      )
-      return JSON.parse(jsonPayload)
-    } catch (err) {
-      return {}
-    }
-  }
 
   useEffect(() => {
     const verifyUser = async () => {
@@ -44,7 +28,7 @@ export default function EditProfileClient({ params }: { params: Promise<{ userna
           },
         })
 
-        if (!response.ok && parseJwt(token) == currUsername) {
+        if (!response.ok && parseJWT(token) == currUsername) {
           const text = await response.text()
           setMessage("Unauthorized: " + text)
         }
